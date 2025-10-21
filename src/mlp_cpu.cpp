@@ -54,27 +54,32 @@ void mlp_backward<ExecCpu>(const float* x, const float* y_target, const float* W
         }
     }
     std::vector<float> gz2(B * Out), gz1(B * H);
-    for (std::size_t i = 0; i < B; ++i) {
-        for (std::size_t o = 0; o < Out; ++o) gz2[i * Out + o] = (2.f / (float) (B * Out)) * (y[i * Out + o] - y_target[i * Out + o]);
-    }
+    for (std::size_t i = 0; i < B; ++i)
+        for (std::size_t o = 0; o < Out; ++o) gz2[i * Out + o] = (2.f / float(B * Out)) * (y[i * Out + o] - y_target[i * Out + o]);
+
     std::fill(dW2, dW2 + Out * H, 0.f);
     std::fill(db2, db2 + Out, 0.f);
     std::fill(dW1, dW1 + H * In, 0.f);
     std::fill(db1, db1 + H, 0.f);
+
     for (std::size_t o = 0; o < Out; ++o)
         for (std::size_t h = 0; h < H; ++h)
-            for (std::size_t i = 0; i < B; ++i) dW2[o * H + h] += gz2[i * Out + o] * relu(z1[i * H + h]);
+            for (std::size_t i = 0; i < B; ++i) dW2[o * H + h] += gz2[i * Out + o] * a1[i * H + h];
+
     for (std::size_t o = 0; o < Out; ++o)
         for (std::size_t i = 0; i < B; ++i) db2[o] += gz2[i * Out + o];
+
     for (std::size_t i = 0; i < B; ++i)
         for (std::size_t h = 0; h < H; ++h) {
             float s = 0.f;
             for (std::size_t o = 0; o < Out; ++o) s += gz2[i * Out + o] * W2[o * H + h];
             gz1[i * H + h] = s * relu_g(z1[i * H + h]);
         }
+
     for (std::size_t h = 0; h < H; ++h)
         for (std::size_t k = 0; k < In; ++k)
             for (std::size_t i = 0; i < B; ++i) dW1[h * In + k] += gz1[i * H + h] * x[i * In + k];
+
     for (std::size_t h = 0; h < H; ++h)
         for (std::size_t i = 0; i < B; ++i) db1[h] += gz1[i * H + h];
 }
