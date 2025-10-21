@@ -13,4 +13,8 @@ set(CMAKE_CUDA_ARCHITECTURES 75;86 CACHE STRING "CUDA archs" FORCE)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
-add_executable(main main.cpp)
+add_executable(main
+        main.cpp
+        src/mlp_cpu.cpp
+)
+target_include_directories(main PRIVATE include)
