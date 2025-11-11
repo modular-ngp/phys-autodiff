@@ -102,6 +102,20 @@ void cuda_phys_loss_backward_nonfused(const GridSpec& g,
                                       float* g_uy,
                                       float* g_uz);
 
+// Timed variants (kernel-only elapsed ms via CUDA events)
+void cuda_phys_residuals_nonfused_timed(const GridSpec& g,
+                                        const float* sigma_tm1,
+                                        const float* sigma_t,
+                                        const float* sigma_tp1,
+                                        const float* u_tm1,
+                                        const float* u_t,
+                                        const float* u_tp1,
+                                        float* R_sigma,
+                                        float* R_ux,
+                                        float* R_uy,
+                                        float* R_uz,
+                                        float* kernel_ms);
+
 // Fully-fused CUDA: single-kernel residuals and single-kernel backward (VJP)
 void cuda_phys_residuals_fused(const GridSpec& g,
                                const float* sigma_tm1,
@@ -127,6 +141,19 @@ void cuda_phys_loss_backward_fused(const GridSpec& g,
                                    float* g_ux,
                                    float* g_uy,
                                    float* g_uz);
+
+void cuda_phys_residuals_fused_timed(const GridSpec& g,
+                                     const float* sigma_tm1,
+                                     const float* sigma_t,
+                                     const float* sigma_tp1,
+                                     const float* u_tm1,
+                                     const float* u_t,
+                                     const float* u_tp1,
+                                     float* R_sigma,
+                                     float* R_ux,
+                                     float* R_uy,
+                                     float* R_uz,
+                                     float* kernel_ms);
 
 } // namespace phys
 

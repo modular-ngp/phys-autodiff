@@ -21,6 +21,7 @@ add_library(phys_core STATIC
         src/phys_cpu.cpp
         src/phys_cuda_nonfused.cu
         src/phys_cuda_fused.cu
+        src/mlp_grid.cpp
 )
 target_include_directories(phys_core PUBLIC include)
 
@@ -49,3 +50,18 @@ add_executable(test_phys_perf
         test/test_phys_perf.cpp
 )
 target_link_libraries(test_phys_perf PRIVATE phys_core)
+
+add_executable(test_mlp_grid_infer
+        test/test_mlp_grid_infer.cpp
+)
+target_link_libraries(test_mlp_grid_infer PRIVATE phys_core)
+
+add_executable(test_mlp_phys_integration_inputs
+        test/test_mlp_phys_integration_inputs.cpp
+)
+target_link_libraries(test_mlp_phys_integration_inputs PRIVATE phys_core)
+
+add_executable(test_mlp_phys_perf
+        test/test_mlp_phys_perf.cpp
+)
+target_link_libraries(test_mlp_phys_perf PRIVATE phys_core)

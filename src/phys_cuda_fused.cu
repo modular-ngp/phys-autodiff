@@ -222,6 +222,67 @@ void cuda_phys_residuals_fused(const GridSpec& g,
     cudaFree(R_sigma); cudaFree(R_ux); cudaFree(R_uy); cudaFree(R_uz);
 }
 
+void cuda_phys_residuals_fused_timed(const GridSpec& g,
+                                     const float* h_sigma_tm1,
+                                     const float* h_sigma_t,
+                                     const float* h_sigma_tp1,
+                                     const float* h_u_tm1,
+                                     const float* h_u_t,
+                                     const float* h_u_tp1,
+                                     float* h_R_sigma,
+                                     float* h_R_ux,
+                                     float* h_R_uy,
+                                     float* h_R_uz,
+                                     float* kernel_ms) {
+    int nx = g.nx, ny = g.ny, nz = g.nz;
+    size_t N = (size_t)nx * ny * nz;
+    int Nint = (int)N;
+    float *sigma_tm1, *sigma_t, *sigma_tp1;
+    float *u_tm1, *u_t, *u_tp1;
+    float *R_sigma, *R_ux, *R_uy, *R_uz;
+    cudaMalloc(&sigma_tm1, N * sizeof(float));
+    cudaMalloc(&sigma_t,   N * sizeof(float));
+    cudaMalloc(&sigma_tp1, N * sizeof(float));
+    cudaMalloc(&u_tm1, 3 * N * sizeof(float));
+    cudaMalloc(&u_t,   3 * N * sizeof(float));
+    cudaMalloc(&u_tp1, 3 * N * sizeof(float));
+    cudaMalloc(&R_sigma, N * sizeof(float));
+    cudaMalloc(&R_ux,    N * sizeof(float));
+    cudaMalloc(&R_uy,    N * sizeof(float));
+    cudaMalloc(&R_uz,    N * sizeof(float));
+    cudaMemcpy(sigma_tm1, h_sigma_tm1, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(sigma_t,   h_sigma_t,   N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(sigma_tp1, h_sigma_tp1, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(u_tm1, h_u_tm1, 3 * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(u_t,   h_u_t,   3 * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(u_tp1, h_u_tp1, 3 * N * sizeof(float), cudaMemcpyHostToDevice);
+
+    float inv2dt = 1.f / (2.f * g.dt);
+    float inv2hx = 1.f / (2.f * g.hx);
+    float inv2hy = 1.f / (2.f * g.hy);
+    float inv2hz = 1.f / (2.f * g.hz);
+    int tb = 256; int blocks = (Nint + tb - 1) / tb;
+
+    cudaEvent_t e0, e1; cudaEventCreate(&e0); cudaEventCreate(&e1);
+    cudaEventRecord(e0);
+    k_residuals_fused<<<blocks, tb>>>(Nint, nx, ny, nz, inv2dt, inv2hx, inv2hy, inv2hz, g.periodic,
+                                      sigma_tm1, sigma_t, sigma_tp1, u_tm1, u_t, u_tp1,
+                                      R_sigma, R_ux, R_uy, R_uz);
+    cudaEventRecord(e1);
+    cudaEventSynchronize(e1);
+    float ms = 0.f; cudaEventElapsedTime(&ms, e0, e1);
+    if (kernel_ms) *kernel_ms = ms;
+    cudaEventDestroy(e0); cudaEventDestroy(e1);
+
+    cudaMemcpy(h_R_sigma, R_sigma, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_R_ux,    R_ux,    N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_R_uy,    R_uy,    N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_R_uz,    R_uz,    N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(sigma_tm1); cudaFree(sigma_t); cudaFree(sigma_tp1);
+    cudaFree(u_tm1); cudaFree(u_t); cudaFree(u_tp1);
+    cudaFree(R_sigma); cudaFree(R_ux); cudaFree(R_uy); cudaFree(R_uz);
+}
+
 void cuda_phys_loss_backward_fused(const GridSpec& g,
                                    const PhysWeights& w,
                                    const float* h_sigma_tm1,
@@ -278,4 +339,3 @@ void cuda_phys_loss_backward_fused(const GridSpec& g,
 }
 
 } // namespace phys
-
