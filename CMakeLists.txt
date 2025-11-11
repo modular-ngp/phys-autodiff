@@ -18,6 +18,7 @@ set(CMAKE_CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 add_library(phys_core STATIC
         src/mlp_cpu.cpp
         src/mlp_cuda.cu
+        src/phys_cpu.cpp
 )
 target_include_directories(phys_core PUBLIC include)
 
