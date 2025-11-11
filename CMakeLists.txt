@@ -19,6 +19,7 @@ add_library(phys_core STATIC
         src/mlp_cpu.cpp
         src/mlp_cuda.cu
         src/phys_cpu.cpp
+        src/phys_cuda_nonfused.cu
 )
 target_include_directories(phys_core PUBLIC include)
 

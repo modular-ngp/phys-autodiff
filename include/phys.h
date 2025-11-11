@@ -63,7 +63,71 @@ void cpu_phys_loss_backward(const GridSpec& g,
                             float* g_uy,
                             float* g_uz);
 
+// Non-fused CUDA implementations (host API: host pointers, handles device malloc/copies/kernels internally)
+void cuda_phys_residuals_nonfused(const GridSpec& g,
+                                  const float* sigma_tm1,
+                                  const float* sigma_t,
+                                  const float* sigma_tp1,
+                                  const float* u_tm1,
+                                  const float* u_t,
+                                  const float* u_tp1,
+                                  float* R_sigma,
+                                  float* R_ux,
+                                  float* R_uy,
+                                  float* R_uz);
+
+void cuda_phys_loss_forward_nonfused(const GridSpec& g,
+                                     const PhysWeights& w,
+                                     const float* sigma_tm1,
+                                     const float* sigma_t,
+                                     const float* sigma_tp1,
+                                     const float* u_tm1,
+                                     const float* u_t,
+                                     const float* u_tp1,
+                                     float* out_loss_sigma,
+                                     float* out_loss_u,
+                                     float* opt_R_sigma = nullptr,
+                                     float* opt_R_ux    = nullptr,
+                                     float* opt_R_uy    = nullptr,
+                                     float* opt_R_uz    = nullptr);
+
+void cuda_phys_loss_backward_nonfused(const GridSpec& g,
+                                      const PhysWeights& w,
+                                      const float* R_sigma,
+                                      const float* R_ux,
+                                      const float* R_uy,
+                                      const float* R_uz,
+                                      float* g_sigma,
+                                      float* g_ux,
+                                      float* g_uy,
+                                      float* g_uz);
+
+// Fully-fused CUDA: single-kernel residuals and single-kernel backward (VJP)
+void cuda_phys_residuals_fused(const GridSpec& g,
+                               const float* sigma_tm1,
+                               const float* sigma_t,
+                               const float* sigma_tp1,
+                               const float* u_tm1,
+                               const float* u_t,
+                               const float* u_tp1,
+                               float* R_sigma,
+                               float* R_ux,
+                               float* R_uy,
+                               float* R_uz);
+
+void cuda_phys_loss_backward_fused(const GridSpec& g,
+                                   const PhysWeights& w,
+                                   const float* sigma_tm1,
+                                   const float* sigma_t,
+                                   const float* sigma_tp1,
+                                   const float* u_tm1,
+                                   const float* u_t,
+                                   const float* u_tp1,
+                                   float* g_sigma,
+                                   float* g_ux,
+                                   float* g_uy,
+                                   float* g_uz);
+
 } // namespace phys
 
 #endif // PHYS_AUTODIFF_PHYS_H
-
